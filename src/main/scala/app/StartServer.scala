@@ -7,8 +7,8 @@ class StartServer {
 
   val config: Config = Config.read()
 
-  //CHALLENGE NOTE: generally global executionContext but in real app
-  // pools for service and server can be separated
+  //CHALLENGE NOTE: generally global executionContext is not acceptable, but in real app
+  // pools for service and server can be explicitly defined and separated
   implicit val executionContext = ExecutionContext.global
 
   def run(): Unit = {
