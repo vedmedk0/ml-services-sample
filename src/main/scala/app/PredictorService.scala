@@ -11,7 +11,7 @@ class PredictorService(implicit executionContext: ExecutionContext) {
 
   private val logger = Logger.getLogger(classOf[PredictorService].getName)
 
-  private val port = 50051
+  private val port = 50051 // TODO: to config
   private[this] var server: Server = null
 
   def start(): Unit = {

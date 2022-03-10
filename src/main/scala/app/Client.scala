@@ -16,7 +16,7 @@ class Client {
 
   private def generateRequest(): PredictRequest = {
     val vector = (for (_ <- 1 to 5) yield rnd.nextFloat()).toArray
-    val label = rnd.nextBoolean()
+    val label = rnd.nextInt(1)
     PredictRequest(vector, label)
   }
 
