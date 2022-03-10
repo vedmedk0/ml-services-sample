@@ -5,20 +5,20 @@ package app
 
 import test.model._
 
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.{AtomicLong, AtomicReference}
 import java.util.logging.{Level, Logger}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.math.abs
 
-class PredictorImpl(implicit executionContext: ExecutionContext)
+class PredictorImpl(config: Config)(implicit executionContext: ExecutionContext)
   extends PredictorGrpc.Predictor {
 
 
-  private val model = LogRegModel(Array(1, -2, 3, -4, 5), -1)
+  private val modelRef: AtomicReference[Option[LogRegModel]] = new AtomicReference[Option[LogRegModel]](None)
 
   private val logger = Logger.getLogger(classOf[PredictorService].getName)
 
-  private val modelThreshold = 0.2 // TODO: to config
+  private val modelThreshold = config.port
 
 
   private val processedRecords = new AtomicLong(0)
@@ -32,6 +32,8 @@ class PredictorImpl(implicit executionContext: ExecutionContext)
   // streaming api with observer can also be used
   override def predict(request: PredictRequest): Future[PredictResponse] = Future {
 
+    val model = modelRef.get().getOrElse(throw new RuntimeException("Service has not model set!"))
+
     val score = model.getScore(request.vector.toArray)
     val guessedRight = abs(score - request.classLabel) < modelThreshold
 
@@ -39,7 +41,7 @@ class PredictorImpl(implicit executionContext: ExecutionContext)
     processedRecords.getAndIncrement()
     if (guessedRight) guessedRecords.getAndIncrement()
 
-    if (passedRecordsToLog.getAndIncrement() >= 10) {
+    if (passedRecordsToLog.getAndIncrement() >= config.logPeriod) {
       logger.log(Level.INFO, s"current accuracy: ${guessedRecords.get().toFloat / processedRecords.get()}")
       passedRecordsToLog.set(0)
     }
@@ -48,7 +50,10 @@ class PredictorImpl(implicit executionContext: ExecutionContext)
   }
 
   override def changeModel(request: ChangeModelRequest): Future[ChangeModelResponse] = Future {
-    ChangeModelResponse("not implemented")
+    val newModel = LogRegModel(request.weights.toArray,request.bias)
+    modelRef.set(Some(newModel))
+    logger.log(Level.INFO,"new model: ")
+    ChangeModelResponse("changed model successfully")
   }
 }
 

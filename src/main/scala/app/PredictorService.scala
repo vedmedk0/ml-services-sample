@@ -6,17 +6,17 @@ import test.model.PredictorGrpc
 import java.util.logging.Logger
 import scala.concurrent.{ExecutionContext, Future}
 
-class PredictorService(implicit executionContext: ExecutionContext) {
+class PredictorService(config: Config)(implicit executionContext: ExecutionContext) {
   self =>
 
   private val logger = Logger.getLogger(classOf[PredictorService].getName)
 
-  private val port = 50051 // TODO: to config
+  private val port = config.port
   private[this] var server: Server = null
 
   def start(): Unit = {
     server = ServerBuilder.forPort(port)
-      .addService(PredictorGrpc.bindService(new PredictorImpl, executionContext))
+      .addService(PredictorGrpc.bindService(new PredictorImpl(config), executionContext))
       .build.start
     logger.info("Server started, listening on " + port)
     sys.addShutdownHook {

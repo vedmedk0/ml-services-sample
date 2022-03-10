@@ -1,4 +1,4 @@
-import sbt.addCompilerPlugin
+
 
 name := "single-app-template"
 
@@ -13,10 +13,12 @@ inThisBuild(
     libraryDependencies := Seq(
       "com.github.pureconfig" %% "pureconfig" % "0.14.0",
       "io.grpc" % "grpc-netty" % scalapb.compiler.Version.grpcJavaVersion,
-      "io.grpc"               % "grpc-netty-shaded"    % scalapb.compiler.Version.grpcJavaVersion,
-      "io.grpc"               % "grpc-services"        % scalapb.compiler.Version.grpcJavaVersion,
+      "io.grpc" % "grpc-netty-shaded" % scalapb.compiler.Version.grpcJavaVersion,
+      "io.grpc" % "grpc-services" % scalapb.compiler.Version.grpcJavaVersion,
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion,
-      "com.thesamet.scalapb" %% "scalapb-runtime"      % scalapb.compiler.Version.scalapbVersion % "protobuf"
+      "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
+      "org.scalatest" %% "scalatest" % "3.2.10",
+
     )
   )
 )

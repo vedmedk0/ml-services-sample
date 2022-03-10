@@ -12,7 +12,7 @@ class StartServer {
   implicit val executionContext = ExecutionContext.global
 
   def run(): Unit = {
-    val server = new PredictorService
+    val server = new PredictorService(config)
     server.start()
     server.blockUntilShutdown()
   }
