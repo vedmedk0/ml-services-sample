@@ -6,17 +6,10 @@ import test.model.PredictorGrpc
 import java.util.logging.Logger
 import scala.concurrent.{ExecutionContext, Future}
 
-/**
- * [[https://github.com/grpc/grpc-java/blob/v0.15.0/examples/src/main/java/io/grpc/examples/helloworld/HelloWorldServer.java]]
- */
-object HelloWorldServer {
-
-}
-
-class HelloWorldServer(executionContext: ExecutionContext) {
+class PredictorService(implicit executionContext: ExecutionContext) {
   self =>
 
-  private val logger = Logger.getLogger(classOf[HelloWorldServer].getName)
+  private val logger = Logger.getLogger(classOf[PredictorService].getName)
 
   private val port = 50051
   private[this] var server: Server = null
