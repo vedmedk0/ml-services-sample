@@ -1,5 +1,7 @@
 package app
 
+import scala.concurrent.ExecutionContext
+
 
 class Start {
 
@@ -7,10 +9,14 @@ class Start {
 
 
   def run(): Unit = {
-    println(s"${config.parameter}")
+    val server = new HelloWorldServer(ExecutionContext.global)
+    server.start()
+    server.blockUntilShutdown()
   }
 }
 
 object Start extends App {
   new Start().run()
+
+
 }
