@@ -4,6 +4,7 @@ package test;
 
 service Predictor {
   rpc Predict (PredictRequest) returns (PredictResponse) {}
+  rpc ChangeModel(ChangeModelRequest) returns (ChangeModelResponse) {}
 }
 
 message PredictRequest {
@@ -13,4 +14,13 @@ message PredictRequest {
 
 message PredictResponse {
   float predictionResult = 1;
+}
+
+message ChangeModelRequest {
+  repeated float weights = 1;
+  float bias = 2;
+}
+
+message ChangeModelResponse {
+  string message = 1;
 }
