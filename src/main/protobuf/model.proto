@@ -9,7 +9,7 @@ service Predictor {
 
 message PredictRequest {
   repeated float vector = 1;
-  bool class = 2;
+  float classLabel = 2;
 }
 
 message PredictResponse {
