@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package test;
+
+service Predictor {
+  rpc Predict (PredictRequest) returns (PredictResponse) {}
+}
+
+message PredictRequest {
+  repeated float vector = 1;
+  bool class = 2;
+}
+
+message PredictResponse {
+  float predictionResult = 1;
+}
