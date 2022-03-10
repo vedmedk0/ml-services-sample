@@ -7,7 +7,6 @@ import java.util.logging.Logger
 import scala.concurrent.{ExecutionContext, Future}
 
 class PredictorService(config: Config)(implicit executionContext: ExecutionContext) {
-  self =>
 
   private val logger = Logger.getLogger(classOf[PredictorService].getName)
 
@@ -21,20 +20,20 @@ class PredictorService(config: Config)(implicit executionContext: ExecutionConte
     logger.info("Server started, listening on " + port)
     sys.addShutdownHook {
       System.err.println("*** shutting down gRPC server since JVM is shutting down")
-      self.stop()
+      stop()
       System.err.println("*** server shut down")
-    }
-  }
-
-  private def stop(): Unit = {
-    if (server != null) {
-      server.shutdown()
     }
   }
 
   def blockUntilShutdown(): Unit = {
     if (server != null) {
       server.awaitTermination()
+    }
+  }
+
+  private def stop(): Unit = {
+    if (server != null) {
+      server.shutdown()
     }
   }
 
