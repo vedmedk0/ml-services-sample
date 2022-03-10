@@ -6,7 +6,7 @@ import pureconfig.{ConfigReader, ConfigSource}
 
 import scala.util.{Failure, Success, Try}
 
-final case class Config(parameter: String)
+final case class Config(port: Int, modelThreshold: Float, logPeriod: Int)
 
 object Config {
 

@@ -11,6 +11,7 @@ import scala.util.Random
  */
 class Client {
 
+  val config: Config = Config.read()
 
   private val rnd = new Random()
 
@@ -21,7 +22,7 @@ class Client {
   }
 
   def run(): Unit = {
-    val channel = ManagedChannelBuilder.forAddress("localhost", 50051).usePlaintext().build
+    val channel = ManagedChannelBuilder.forAddress("localhost", config.port).usePlaintext().build
     val blockingStub = PredictorGrpc.blockingStub(channel)
 
 

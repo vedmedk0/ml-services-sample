@@ -19,8 +19,10 @@ case class LogRegModel(weigts: Array[Float], bias: Float) {
 
   private def normalizeValue(value: Float): Float = (1 / (1 + exp(-value))).toFloat
 
+  override def toString: String = s"weights:${weigts.mkString("[", ",", "]")}, bias: $bias"
+
   def getScore(sample: Array[Float]): Float = {
-    require(sample.length == weigts.length, "sample and weights size not match")
+    require(sample.length == weigts.length, "Sample and weights size not match")
 
     val notNormalizedValue = bias + scalarProduct(sample, weigts)
 
