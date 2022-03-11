@@ -7,6 +7,6 @@ To run service with model:
 2. start service:  `sbt "Compile / runMain app.StartServer"`
 3. start client for generating test messages/models:  `sbt "Compile / runMain client.Client"`
 
-parameters can be changed in reference.conf
+parameters can be changed in `src/main/resources/reference.conf`
 
 `sbt test` to run unit tests 
