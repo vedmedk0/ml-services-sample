@@ -26,8 +26,8 @@ class PredictorImpl(config: Config)(implicit executionContext: ExecutionContext)
    * CHALLENGE NOTE: I decided to use here simple request-response gRPC api, but
    * streaming api with observer can also be used (or fs2/akka streams)
    *
-   * @param request
-   * @return
+   * @param request request with sample values and class label
+   * @return result of predictioin by current model
    */
   override def predict(request: PredictRequest): Future[PredictResponse] = Future {
 

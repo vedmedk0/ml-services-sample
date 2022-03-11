@@ -30,7 +30,7 @@ case class LogRegModel(weights: Vector[Float], bias: Float) {
    * if weights are w1, w2, w3,... and bias is b, and sample is vector with  components x1, x2, x3, ...
    * then z = b + x1 * w1 + x2 * w2 + ... + xn * wn
    * score = 1 / (1 + exp(-z))
-   * @param sample
+   * @param sample - vector of sample values
    * @return score, float ranged from 0 to 1
    */
   def getScore(sample: Vector[Float]): Float = {

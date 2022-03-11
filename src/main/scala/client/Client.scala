@@ -15,7 +15,7 @@ import scala.util.Random
  */
 class Client {
 
-  val config: Config = Config.read()
+  private val config: Config = Config.read()
 
   private val rnd = new Random()
 
@@ -28,7 +28,7 @@ class Client {
   )
 
   private def generateRequest(): PredictRequest = {
-    val vector = (for (_ <- 1 to 5) yield rnd.nextFloat())
+    val vector = for (_ <- 1 to 5) yield rnd.nextFloat()
     val label = rnd.nextInt(2)
     PredictRequest(vector, label)
   }

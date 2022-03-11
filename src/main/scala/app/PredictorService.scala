@@ -4,7 +4,7 @@ import io.grpc.{Server, ServerBuilder}
 import test.model.PredictorGrpc
 
 import java.util.logging.Logger
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class PredictorService(config: Config)(implicit executionContext: ExecutionContext) {
 

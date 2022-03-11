@@ -5,7 +5,7 @@ import scala.concurrent.ExecutionContext
 
 class StartServer {
 
-  val config: Config = Config.read()
+  private val config: Config = Config.read()
 
   // CHALLENGE NOTE: generally global executionContext is not acceptable, but in real app
   // pools for service and server can be explicitly defined and separated
