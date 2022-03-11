@@ -5,8 +5,8 @@ import scala.math.exp
 case class LogRegModel(weights: Vector[Float], bias: Float) {
 
   /**
-   * scalar product of two vectors
-   * matching length ensured by calling function
+   * Scalar product of two vectors.
+   * Matching length ensured by calling function.
    * CHALLENGE NOTE: math libraries can be used here instead of collection transformations
    * @param left  - left operand of product
    * @param right - right operand of product
@@ -17,7 +17,7 @@ case class LogRegModel(weights: Vector[Float], bias: Float) {
   }
 
   /**
-   * fit value in (0, 1) range
+   * Fit value in (0, 1) range
    * @param value
    * @return
    */
