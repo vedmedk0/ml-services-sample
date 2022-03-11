@@ -1,8 +1,5 @@
 package app
 
-
-//import java.util.concurrent.atomic.AtomicReference
-
 import test.model._
 
 import java.util.concurrent.atomic.{AtomicLong, AtomicReference}
@@ -23,9 +20,15 @@ class PredictorImpl(config: Config)(implicit executionContext: ExecutionContext)
 
   private val passedRecordsToLog = new AtomicLong(0)
 
-
-  // CHALLENGE NOTE: I decided to use here simple request-response api, but
-  // streaming api with observer can also be used (or fs2/akka streams)
+  /**
+   * Get score of a sample from current model
+   *
+   * CHALLENGE NOTE: I decided to use here simple request-response gRPC api, but
+   * streaming api with observer can also be used (or fs2/akka streams)
+   *
+   * @param request
+   * @return
+   */
   override def predict(request: PredictRequest): Future[PredictResponse] = Future {
 
     val model = modelRef.get().getOrElse {
@@ -34,7 +37,33 @@ class PredictorImpl(config: Config)(implicit executionContext: ExecutionContext)
     }
 
     val score = model.getScore(request.vector.toVector)
-    val guessedRight = abs(score - request.classLabel) < config.modelThreshold
+
+    processStatistics(score, request.classLabel)
+
+    PredictResponse(score)
+  }
+
+  /**
+   * Change model in service
+   *
+   * @param request weights and biases of new model
+   * @return text response if done successfully
+   */
+  override def changeModel(request: ChangeModelRequest): Future[ChangeModelResponse] = Future {
+    val newModel = LogRegModel(request.weights.toVector, request.bias)
+    modelRef.set(Some(newModel))
+    logger.log(Level.INFO, s"new model: ${newModel.toString}")
+    ChangeModelResponse("changed model successfully")
+  }
+
+  /**
+   * Process prediction statistics and log
+   *
+   * @param score score from model
+   * @param label real label for sample
+   */
+  private def processStatistics(score: Float, label: Float): Unit = {
+    val guessedRight = abs(score - label) < config.modelThreshold
 
     processedRecords.getAndIncrement()
     if (guessedRight) guessedRecords.getAndIncrement()
@@ -43,18 +72,7 @@ class PredictorImpl(config: Config)(implicit executionContext: ExecutionContext)
       logger.log(Level.INFO, s"Current accuracy: ${guessedRecords.get().toFloat / processedRecords.get()}")
       passedRecordsToLog.set(0)
     }
-
-    PredictResponse(score)
   }
 
-  override def changeModel(request: ChangeModelRequest): Future[ChangeModelResponse] = Future {
-    val newModel = LogRegModel(request.weights.toVector, request.bias)
-    modelRef.set(Some(newModel))
-    logger.log(Level.INFO, s"new model: ${newModel.toString}")
-    ChangeModelResponse("changed model successfully")
-  }
-}
-
-object PredictorImpl {
 
 }
