@@ -1,6 +1,6 @@
 
 
-name := "single-app-template"
+name := "risk-ident-test-task"
 
 version := "0.1"
 
@@ -23,7 +23,7 @@ inThisBuild(
   )
 )
 
-lazy val root = Project(id = "single-app-template", base = file(".")).settings(
+lazy val root = Project(id = "risk-ident-test-task", base = file(".")).settings(
   Compile / PB.targets := Seq(
     scalapb.gen() -> (Compile / sourceManaged).value
   ),
