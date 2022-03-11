@@ -46,7 +46,7 @@ class Client {
   }
 
   private def sendData(): Future[Unit] = Future {
-    for (_ <- 1 to 1000) yield {
+    for (_ <- 1 to config.inputDataCount) yield {
       val res = nonBlockingStub.predict(generateRequest())
       Thread.sleep(500)
       res.recover { case e => println(e.toString) }
