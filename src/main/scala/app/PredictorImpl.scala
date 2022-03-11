@@ -27,7 +27,7 @@ class PredictorImpl(config: Config)(implicit executionContext: ExecutionContext)
    * streaming api with observer can also be used (or fs2/akka streams)
    *
    * @param request request with sample values and class label
-   * @return result of predictioin by current model
+   * @return result of prediction by current model
    */
   override def predict(request: PredictRequest): Future[PredictResponse] = Future {
 
