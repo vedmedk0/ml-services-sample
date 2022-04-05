@@ -23,7 +23,7 @@ inThisBuild(
   )
 )
 
-lazy val root = Project(id = "risk-ident-test-task", base = file(".")).settings(
+lazy val root = Project(id = "ml-grpc-services", base = file(".")).settings(
   Compile / PB.targets := Seq(
     scalapb.gen() -> (Compile / sourceManaged).value
   ),
