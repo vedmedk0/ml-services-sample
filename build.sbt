@@ -1,6 +1,6 @@
 
 
-name := "risk-ident-test-task"
+name := "ml-grpc-services"
 
 version := "0.1"
 
