@@ -1,4 +1,4 @@
-# Code Challenge
+# ML gRPC Services
  
 sbt 1.3.8 required to run this example
 
