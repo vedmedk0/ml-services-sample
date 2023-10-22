@@ -9,4 +9,8 @@ To run service with model:
 
 parameters can be changed in `src/main/resources/reference.conf`
 
-`sbt test` to run unit tests 
+`sbt test` to run unit tests
+
+# Typelevel-stack service
+
+Same purpose, better approach (uses kafka instead of direct grpc connection)
