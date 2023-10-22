@@ -1,4 +1,4 @@
-# ML gRPC Services
+# ML gRPC Services (DEPRECATED)
  
 sbt 1.3.8 required to run this example
 
@@ -14,3 +14,6 @@ parameters can be changed in `src/main/resources/reference.conf`
 # Typelevel-stack service
 
 Same purpose, better approach (uses kafka instead of direct grpc connection)
+1) start kafka: `docker compose up -d`
+2) start prediction service: `sbt "typelevelService / runMain app.PredictorApp"` (or in IDE)
+3) start emitting records: `sbt "typelevelService / runMain emitters.StreamEmitterApp"` (or in IDE)
