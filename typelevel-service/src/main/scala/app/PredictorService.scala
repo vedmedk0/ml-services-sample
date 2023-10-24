@@ -1,92 +1,41 @@
 package app
 
-import app.PredictorService.AccuracyCounter
-import cats.data._
+import cats._
 import cats.effect._
 import cats.effect.std.Console
-import cats.implicits._
-import config.MLServiceConfig.AppConfig
+import config.MLServiceConfig
 import domain._
-import domain.math.MathAlgebra
 import fs2.kafka._
 import io.circe._
-import kafka.KafkaHelpers
+import io.circe.generic.auto._
+import io.circe.parser.decode
 
-import scala.concurrent.duration._
-import scala.math.abs
-
-class PredictorService[F[_]: Async: Concurrent: Console: MathAlgebra](
-    predictorConsumerSettings: ConsumerSettings[F, String, Either[Error, Prediction]],
-    modelConsumerSettings: ConsumerSettings[F, String, Either[Error, Model]],
-    appConfig: AppConfig
-) {
-  //TODO: proper error handling & slf4j logging
-
-  private val threshold: Float = appConfig.modelThreshold
-
-  private val model: F[Ref[F, Option[Model]]] = Ref.of[F, Option[Model]](none)
-
-  private val counter: F[Ref[F, AccuracyCounter]] = Ref.of[F, AccuracyCounter](AccuracyCounter())
-
-  def guessed(model: Model, prediction: Prediction): OptionT[F, Boolean] =
-    MathAlgebra[F]
-      .getScore(prediction.vector, model.weights, model.bias)
-      .map(score => abs(score - prediction.label) < threshold)
-
-  private def predictIfModelSet(prediction: Prediction, modelRef: Ref[F, Option[Model]]): F[Option[Boolean]] =
-    (for {
-      m      <- OptionT(modelRef.get).toRight("No model set!")
-      result <- guessed(m, prediction).toRight("Dimensions not equal")
-    } yield result)
-      .foldF(
-        errorMsg => Console[F].println(errorMsg).map(_ => none),
-        _.some.pure[F]
-      )
-
-  private def modifyCounter(guess: Boolean, counterRef: Ref[F, AccuracyCounter]): F[AccuracyCounter] =
-    counterRef.updateAndGet(_.inc(guess))
-
-  private def predictStream(
-      modelRef: Ref[F, Option[Model]],
-      counterRef: Ref[F, AccuracyCounter]
-  ): fs2.Stream[F, Unit] = KafkaHelpers
-    .reportfulKafkaStream[F, Prediction](predictorConsumerSettings)
-    .evalMapFilter {
-      predictIfModelSet(_, modelRef)
-    }
-    .evalMap {
-      modifyCounter(_, counterRef)
-    }
-    .drop(appConfig.logPeriod - 1) // reports every `logPeriod` records
-    .take(1)
-    .repeat
-    .evalTap(acc => Console[F].println(s"result:$acc, accuracy:${acc.accuracy()} "))
-    .void
-
-  private def listenModelsStream(modelRef: Ref[F, Option[Model]]) =
-    KafkaHelpers
-      .reportfulKafkaStream[F, Model](modelConsumerSettings)
-      .evalTap { newModel =>
-        modelRef.getAndSet(newModel.some).flatMap {
-          case Some(oldModel) => Console[F].println(s"Changed model $oldModel to $newModel")
-          case None           => Console[F].println(s"Set first model $newModel")
-        }
-      }
-      .delayBy(5.second)
-
-  def runService(): F[Unit] = for {
-    mRef <- model
-    cRef <- counter
-    _    <- (listenModelsStream(mRef) concurrently predictStream(mRef, cRef)).compile.drain
-  } yield ()
-
-}
+import java.nio.charset.Charset
 
 object PredictorService {
-  private case class AccuracyCounter(guessed: Long = 0, processed: Long = 0) {
-    def accuracy(): Float = if (processed == 0) 0 else guessed.toFloat / processed
 
-    def inc(guessed: Boolean): AccuracyCounter =
-      if (guessed) this.copy(this.guessed + 1, this.processed + 1) else this.copy(processed = this.processed + 1)
+  def run[F[_]: Async: Concurrent: Console]: F[Unit] = FlatMap[F].flatMap(MLServiceConfig.load()) { c =>
+    //TODO: topic-name dependent deserialization
+
+    def caseClassDeserializer[CC <: Streamable: Decoder]: Deserializer[F, Either[Error, CC]] =
+      GenericDeserializer
+        .lift[F, Either[Error, CC]] { bytes: Array[Byte] =>
+          Sync[F].delay(decode[CC](new String(bytes, Charset.forName("UTF-8"))))
+        }
+
+    def consumerSettings[CC <: Streamable: Decoder](
+        bootstrapServer: String,
+        autoOffsetReset: AutoOffsetReset,
+        groupId: String
+    ): ConsumerSettings[F, String, Either[Error, CC]] =
+      ConsumerSettings(GenericDeserializer.string[F], caseClassDeserializer[CC])
+        .withBootstrapServers(bootstrapServer)
+        .withAutoOffsetReset(autoOffsetReset)
+        .withGroupId(groupId)
+    val ac = c.appConfig
+    val pc = consumerSettings[Prediction](ac.kafkaBootstrapServer, ac.resetOffset, "predictionConsumer")
+    val mc = consumerSettings[Model](ac.kafkaBootstrapServer, ac.resetOffset, "modelConsumer")
+    new Predictor[F](pc, mc, ac).predict()
   }
+
 }
