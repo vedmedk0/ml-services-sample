@@ -27,7 +27,8 @@ object Sink {
         .evalMap {
           objectToRecord
         }
-        .through(KafkaProducer.pipe(producerSettings)).void
+        .through(KafkaProducer.pipe(producerSettings))
+        .void
     }
 
   implicit def consoleSink[F[_]: Async: Functor: Console, A]: Sink[F, A] = (stream: fs2.Stream[F, A]) =>

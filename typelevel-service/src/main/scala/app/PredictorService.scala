@@ -1,5 +1,6 @@
 package app
 
+import app.listener.Source
 import cats._
 import cats.effect._
 import cats.effect.std.Console
@@ -34,9 +35,15 @@ object PredictorService {
         .withGroupId(groupId)
 
     val ac = c.appConfig
-    val pc = consumerSettings[Prediction](ac.kafkaBootstrapServer, ac.resetOffset, "predictionConsumer")
-    val mc = consumerSettings[Model](ac.kafkaBootstrapServer, ac.resetOffset, "modelConsumer")
-    Predictor.predict[F](pc, mc, ac)
+    implicit val ps = Source.kafkaSourceCirceDeser(
+      consumerSettings[Prediction](ac.kafkaBootstrapServer, ac.resetOffset, "predictionConsumer")
+    )
+    implicit val ms =
+      Source.kafkaSourceCirceDeser(
+        consumerSettings[Model](ac.kafkaBootstrapServer, ac.resetOffset, "modelConsumer")
+      )
+
+    Predictor.predict[F](ac)
   }
 
 }
