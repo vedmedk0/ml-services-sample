@@ -7,13 +7,15 @@ import cats.effect.std.Console
 import cats.implicits._
 import config.MLServiceConfig.AppConfig
 import domain._
+import domain.math.MathAlgebra
 import fs2.kafka._
 import io.circe._
 import kafka.KafkaHelpers
 
 import scala.concurrent.duration._
+import scala.math.abs
 
-class PredictorService[F[_]: Async: Concurrent: Console](
+class PredictorService[F[_]: Async: Concurrent: Console: MathAlgebra](
     predictorConsumerSettings: ConsumerSettings[F, String, Either[Error, Prediction]],
     modelConsumerSettings: ConsumerSettings[F, String, Either[Error, Model]],
     appConfig: AppConfig
@@ -26,10 +28,20 @@ class PredictorService[F[_]: Async: Concurrent: Console](
 
   private val counter: F[Ref[F, AccuracyCounter]] = Ref.of[F, AccuracyCounter](AccuracyCounter())
 
-  private def predictIfModelSet(prediction: Prediction, modelRef: Ref[F, Option[Model]]): F[Option[Boolean]] = (for {
-    m <- OptionT(modelRef.get)
-    result = MathOps.guessed(m, prediction, threshold)
-  } yield result).orElseF(Console[F].println("No model set!").map(_ => none[Boolean])).value
+  def guessed(model: Model, prediction: Prediction): OptionT[F, Boolean] =
+    MathAlgebra[F]
+      .getScore(prediction.vector, model.weights, model.bias)
+      .map(score => abs(score - prediction.label) < threshold)
+
+  private def predictIfModelSet(prediction: Prediction, modelRef: Ref[F, Option[Model]]): F[Option[Boolean]] =
+    (for {
+      m      <- OptionT(modelRef.get).toRight("No model set!")
+      result <- guessed(m, prediction).toRight("Dimensions not equal")
+    } yield result)
+      .foldF(
+        errorMsg => Console[F].println(errorMsg).map(_ => none),
+        _.some.pure[F]
+      )
 
   private def modifyCounter(guess: Boolean, counterRef: Ref[F, AccuracyCounter]): F[AccuracyCounter] =
     counterRef.updateAndGet(_.inc(guess))
