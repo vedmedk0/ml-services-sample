@@ -2,7 +2,6 @@ package app
 
 import scala.concurrent.ExecutionContext
 
-
 class StartServer {
 
   private val config: Config = Config.read()

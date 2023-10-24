@@ -24,12 +24,13 @@ object StreamEmitterService {
       ProducerSettings(keySerializer = GenericSerializer.string[F], valueSerializer = caseClassSerializer[CC])
         .withBootstrapServers(kafkaBootstrapService)
 
-    def emit(modelEmitter: ModelEmitter[F], vectorEmitter: PredictionEmitter[F]): F[Unit] =
-      (modelEmitter.emitModels() concurrently vectorEmitter.emitVectors()).compile.drain
-
     val ec = c.emitterConfig
-    val me = new ModelEmitter[F](producerSettings[Model](ec.kafkaBootstrapServer), ec.emitModelPeriod)
-    val pe = new PredictionEmitter[F](producerSettings[Prediction](ec.kafkaBootstrapServer), ec.emitPredictionPeriod)
-    emit(me, pe)
+
+    implicit val modelProducerSink = Sink.kafkaSink(producerSettings[Model](ec.kafkaBootstrapServer))
+    implicit val predictionProducerSink =
+      Sink.kafkaSink(producerSettings[Prediction](ec.kafkaBootstrapServer))
+    val me = new ModelEmitter(ec.emitModelPeriod)
+    val pe = new PredictionEmitter(ec.emitPredictionPeriod)
+    Emitter.emit(me, pe)
   }
 }

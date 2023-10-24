@@ -1,4 +1,4 @@
-package domain.math
+package domain
 
 import cats._
 import cats.data._
@@ -19,7 +19,7 @@ trait MathAlgebra[F[_]] {
 
 object MathAlgebra {
 
-  def apply[G[_]](implicit A: MathAlgebra[G]): MathAlgebra[G] = implicitly[MathAlgebra[G]]
+  def apply[G[_]: MathAlgebra]: MathAlgebra[G] = implicitly[MathAlgebra[G]]
 
   implicit def ceAlgebra[G[_]: Sync]: MathAlgebra[G] = new MathAlgebra[G] {
     override def scalarProduct(left: IndexedSeq[Float], right: IndexedSeq[Float]): G[Float] =

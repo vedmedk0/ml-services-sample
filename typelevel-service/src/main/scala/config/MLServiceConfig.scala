@@ -25,7 +25,11 @@ object MLServiceConfig {
       logPeriod: Int
   )
 
-  case class EmitterConfig(kafkaBootstrapServer: String, emitPredictionPeriod: FiniteDuration, emitModelPeriod: FiniteDuration)
+  case class EmitterConfig(
+      kafkaBootstrapServer: String,
+      emitPredictionPeriod: FiniteDuration,
+      emitModelPeriod: FiniteDuration
+  )
 
   implicit val offsetConfigReader: ConfigReader[AutoOffsetReset] = ConfigReader.fromString { s =>
     s.toLowerCase match {
@@ -36,6 +40,6 @@ object MLServiceConfig {
     }
   }
 
-  def load[F[_]:Sync](): F[MLServiceConfig] = ConfigSource.default.loadF[F, MLServiceConfig]
+  def load[F[_]: Sync](): F[MLServiceConfig] = ConfigSource.default.loadF[F, MLServiceConfig]
 
 }

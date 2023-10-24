@@ -7,8 +7,7 @@ import java.util.logging.{Level, Logger}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.math.abs
 
-class PredictorImpl(config: Config)(implicit executionContext: ExecutionContext)
-  extends PredictorGrpc.Predictor {
+class PredictorImpl(config: Config)(implicit executionContext: ExecutionContext) extends PredictorGrpc.Predictor {
 
   private val modelRef: AtomicReference[Option[LogRegModel]] = new AtomicReference[Option[LogRegModel]](None)
 
@@ -20,15 +19,14 @@ class PredictorImpl(config: Config)(implicit executionContext: ExecutionContext)
 
   private val passedRecordsToLog = new AtomicLong(0)
 
-  /**
-   * Get score of a sample from current model
-   *
-   * CHALLENGE NOTE: I decided to use here simple request-response gRPC api, but
-   * streaming api with observer can also be used (or fs2/akka streams)
-   *
-   * @param request request with sample values and class label
-   * @return result of prediction by current model
-   */
+  /** Get score of a sample from current model
+    *
+    * CHALLENGE NOTE: I decided to use here simple request-response gRPC api, but
+    * streaming api with observer can also be used (or fs2/akka streams)
+    *
+    * @param request request with sample values and class label
+    * @return result of prediction by current model
+    */
   override def predict(request: PredictRequest): Future[PredictResponse] = Future {
 
     val model = modelRef.get().getOrElse {
@@ -43,12 +41,11 @@ class PredictorImpl(config: Config)(implicit executionContext: ExecutionContext)
     PredictResponse(score)
   }
 
-  /**
-   * Change model in service
-   *
-   * @param request weights and biases of new model
-   * @return text response if done successfully
-   */
+  /** Change model in service
+    *
+    * @param request weights and biases of new model
+    * @return text response if done successfully
+    */
   override def changeModel(request: ChangeModelRequest): Future[ChangeModelResponse] = Future {
     val newModel = LogRegModel(request.weights.toVector, request.bias)
     modelRef.set(Some(newModel))
@@ -56,12 +53,11 @@ class PredictorImpl(config: Config)(implicit executionContext: ExecutionContext)
     ChangeModelResponse("changed model successfully")
   }
 
-  /**
-   * Process prediction statistics and log
-   *
-   * @param score score from model
-   * @param label real label for sample
-   */
+  /** Process prediction statistics and log
+    *
+    * @param score score from model
+    * @param label real label for sample
+    */
   private def processStatistics(score: Float, label: Float): Unit = {
     val guessedRight = abs(score - label) < config.modelThreshold
 
@@ -73,6 +69,5 @@ class PredictorImpl(config: Config)(implicit executionContext: ExecutionContext)
       passedRecordsToLog.set(0)
     }
   }
-
 
 }

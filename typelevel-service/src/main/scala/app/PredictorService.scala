@@ -35,7 +35,7 @@ object PredictorService {
     val ac = c.appConfig
     val pc = consumerSettings[Prediction](ac.kafkaBootstrapServer, ac.resetOffset, "predictionConsumer")
     val mc = consumerSettings[Model](ac.kafkaBootstrapServer, ac.resetOffset, "modelConsumer")
-    new Predictor[F](pc, mc, ac).predict()
+    Predictor.predict[F](pc, mc, ac)
   }
 
 }

@@ -10,13 +10,15 @@ class PredictorService(config: Config)(implicit executionContext: ExecutionConte
 
   private val logger = Logger.getLogger(classOf[PredictorService].getName)
 
-  private val port = config.port
+  private val port                 = config.port
   private[this] var server: Server = null
 
   def start(): Unit = {
-    server = ServerBuilder.forPort(port)
+    server = ServerBuilder
+      .forPort(port)
       .addService(PredictorGrpc.bindService(new PredictorImpl(config), executionContext))
-      .build.start
+      .build
+      .start
     logger.info("Server started, listening on " + port)
     sys.addShutdownHook {
       System.err.println("*** shutting down gRPC server since JVM is shutting down")
