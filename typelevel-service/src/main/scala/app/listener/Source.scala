@@ -1,4 +1,4 @@
-package app
+package app.listener
 
 import cats.Applicative
 import cats.effect._

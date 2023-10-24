@@ -1,10 +1,9 @@
-package app
+package app.listener
 
 import cats.effect._
 import cats.effect.std.Console
 import cats.implicits._
 import domain.Model
-import fs2.kafka.ConsumerSettings
 import io.circe.Error
 
 import scala.concurrent.duration.DurationInt

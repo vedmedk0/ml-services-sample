@@ -32,6 +32,7 @@ object PredictorService {
         .withBootstrapServers(bootstrapServer)
         .withAutoOffsetReset(autoOffsetReset)
         .withGroupId(groupId)
+
     val ac = c.appConfig
     val pc = consumerSettings[Prediction](ac.kafkaBootstrapServer, ac.resetOffset, "predictionConsumer")
     val mc = consumerSettings[Model](ac.kafkaBootstrapServer, ac.resetOffset, "modelConsumer")

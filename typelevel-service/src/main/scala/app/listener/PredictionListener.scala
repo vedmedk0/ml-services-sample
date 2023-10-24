@@ -1,13 +1,12 @@
-package app
+package app.listener
 
-import app.PredictionListener.AccuracyCounter
+import app.listener.PredictionListener.AccuracyCounter
 import cats.data.OptionT
 import cats.effect._
 import cats.effect.std.Console
 import cats.implicits._
 import config.MLServiceConfig.AppConfig
 import domain.{MathAlgebra, Model, Prediction}
-import fs2.kafka.ConsumerSettings
 import io.circe.Error
 
 import scala.math.abs

@@ -1,4 +1,4 @@
-package emitters
+package generator.emitter
 
 import cats.effect.Temporal
 import cats.effect.kernel.Async
@@ -9,8 +9,8 @@ import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
 class ModelEmitter[F[_]: Temporal: Async](
     emitPeriod: FiniteDuration
-)(implicit sink: Sink[F, Model, ProducerResult[String, Model]])
-    extends Emitter[F, Model, ProducerResult[String, Model]] {
+)(implicit sink: Sink[F, Model])
+    extends Emitter[F, Model] {
 
   override val generate: fs2.Stream[F, Model] = fs2
     .Stream[F, Model](

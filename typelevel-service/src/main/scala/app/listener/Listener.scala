@@ -1,6 +1,6 @@
-package app
+package app.listener
 
-import app.Listener.ErrorReporter
+import app.listener.Listener.ErrorReporter
 import cats.effect._
 import cats.effect.std.Console
 import cats.implicits._

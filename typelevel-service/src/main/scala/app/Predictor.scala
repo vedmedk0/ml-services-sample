@@ -1,5 +1,6 @@
 package app
 
+import app.listener.{ModelListener, PredictionListener, Source}
 import cats.effect._
 import cats.effect.std.Console
 import cats.implicits._

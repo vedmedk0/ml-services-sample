@@ -1,16 +1,18 @@
-package emitters
+package generator
 
 import cats._
 import cats.effect._
 import cats.effect.kernel.Sync
+import cats.implicits.toFunctorOps
 import config.MLServiceConfig
 import domain._
 import fs2.kafka.{GenericSerializer, ProducerSettings, Serializer}
+import generator.emitter._
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.syntax._
 
-object StreamEmitterService {
+object GeneratorService {
 
   def run[F[_]: Async: Temporal]: F[Unit] = FlatMap[F].flatMap(MLServiceConfig.load()) { c =>
     //TODO: topic-name dependent serialization
