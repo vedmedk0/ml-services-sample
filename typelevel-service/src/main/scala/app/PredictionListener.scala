@@ -14,10 +14,10 @@ import scala.math.abs
 
 class PredictionListener[F[_]: Async: Concurrent: Console: MathAlgebra](
     modelRef: Ref[F, Option[Model]],
-    appConfig: AppConfig,
-)(implicit source: Source[F, Prediction, Error]) extends Listener[F, Prediction, Error] {
+    appConfig: AppConfig
+)(implicit source: Source[F, Prediction, Error])
+    extends Listener[F, Prediction, Error] {
   //TODO: proper error handling & slf4j logging
-
 
   private def guessed(model: Model, prediction: Prediction): OptionT[F, Boolean] =
     MathAlgebra[F]

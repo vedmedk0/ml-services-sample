@@ -10,10 +10,10 @@ import io.circe.Error
 import scala.concurrent.duration.DurationInt
 
 class ModelListener[F[_]: Async: Concurrent: Console](
-    modelRef: Ref[F, Option[Model]],
-)(implicit source: Source[F, Model, Error]) extends Listener[F, Model, Error] {
+    modelRef: Ref[F, Option[Model]]
+)(implicit source: Source[F, Model, Error])
+    extends Listener[F, Model, Error] {
   //TODO: proper error handling & slf4j logging
-
 
   override protected def executeEffects(initStream: fs2.Stream[F, Model]): fs2.Stream[F, Unit] =
     initStream
