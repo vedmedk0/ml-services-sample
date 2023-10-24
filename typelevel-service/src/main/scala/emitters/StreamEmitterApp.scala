@@ -29,8 +29,7 @@ class StreamEmitterApp[F[_]: Async: Temporal] {
     val ec = c.emitterConfig
     val me = new ModelEmitter[F](producerSettings[Model](ec.kafkaBootstrapServer), ec.emitModelPeriod)
     val pe = new PredictionEmitter[F](producerSettings[Prediction](ec.kafkaBootstrapServer), ec.emitPredictionPeriod)
-    val service = new StreamEmitterService[F](me, pe)
-    service.emit
+    StreamEmitterService.emit[F](me, pe)
   }
 
 }
