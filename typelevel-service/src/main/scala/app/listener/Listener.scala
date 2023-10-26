@@ -1,9 +1,8 @@
 package app.listener
 
-import app.listener.ListenerResults.{PredictorError, PredictorResult, PredictorSuccess}
+import app.listener.ListenerResults.PredictorResult
 import cats.effect._
 import cats.effect.std.Console
-import cats.implicits._
 import domain.Streamable
 
 import scala.reflect.runtime.{universe => ru}
@@ -17,6 +16,6 @@ abstract class Listener[F[_]: Async: Concurrent: Console, CC <: Streamable: ru.T
   ): fs2.Stream[F, PredictorResult]
 
   final def listen: fs2.Stream[F, PredictorResult] =
-    source.listen.evalMap(_.record.value.pure[F]).through(streamLogic)
+    source.listen.map(_.record.value).through(streamLogic)
 
 }
