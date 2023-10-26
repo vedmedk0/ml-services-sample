@@ -10,7 +10,7 @@ abstract class Emitter[F[_]: Async: Functor: UUIDGen, A <: Streamable](implicit
 
   protected def generate: fs2.Stream[F, A]
 
-  final def emit: fs2.Stream[F, Unit] = sink.produce(generate)
+  final def emit: fs2.Stream[F, Unit] = generate.through(sink.produce)
 }
 
 object Emitter {

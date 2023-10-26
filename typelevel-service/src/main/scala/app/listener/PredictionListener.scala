@@ -1,7 +1,8 @@
 package app.listener
 
+import app.listener.ListenerResults._
 import app.listener.PredictionListener.AccuracyCounter
-import cats.data.OptionT
+import cats.data._
 import cats.effect._
 import cats.effect.std.Console
 import cats.implicits._
@@ -16,43 +17,42 @@ class PredictionListener[F[_]: Async: Concurrent: Console: MathAlgebra](
     appConfig: AppConfig
 )(implicit source: Source[F, Prediction, Error])
     extends Listener[F, Prediction, Error] {
-  //TODO: proper error handling & slf4j logging
 
   private def guessed(model: Model, prediction: Prediction): OptionT[F, Boolean] =
     MathAlgebra[F]
       .getScore(prediction.vector, model.weights, model.bias)
       .map(score => abs(score - prediction.label) < appConfig.modelThreshold)
 
-  private def predictIfModelSet(prediction: Prediction, modelRef: Ref[F, Option[Model]]): F[Option[Boolean]] =
+  private def predictIfModelSet(
+      predictionMaybe: Either[Error, Prediction],
+      modelRef: Ref[F, Option[Model]],
+      counterRef: Ref[F, AccuracyCounter]
+  ): F[PredictorResult] =
     (for {
-      m      <- OptionT(modelRef.get).toRight("No model set!")
-      result <- guessed(m, prediction).toRight("Dimensions not equal")
-    } yield result)
-      .foldF(
-        errorMsg => Console[F].println(errorMsg).map(_ => none),
-        _.some.pure[F]
-      )
+      prediction <- EitherT.fromEither[F](predictionMaybe.leftMap(ParseError))
+      model      <- OptionT(modelRef.get).toRight(NoModelError())
+      guess      <- guessed(model, prediction).toRight[PredictorError](DimensionsNotEqualError(prediction, model))
+      ac <- OptionT
+        .liftF(modifyCounter(guess, counterRef))
+        .toRight[PredictorError](OtherError("Impossible to make error here"))
+    } yield Report(ac)).merge
 
   private def modifyCounter(guess: Boolean, counterRef: Ref[F, AccuracyCounter]): F[AccuracyCounter] =
     counterRef.updateAndGet(_.inc(guess))
 
-  override protected def executeEffects(initStream: fs2.Stream[F, Prediction]): fs2.Stream[F, Unit] =
+  override protected def streamLogic(
+      initStream: fs2.Stream[F, Either[Error, Prediction]]
+  ): fs2.Stream[F, PredictorResult] =
     fs2.Stream.eval(Ref.of[F, AccuracyCounter](AccuracyCounter())).flatMap { cRef =>
       initStream
-        .evalMapFilter(predictIfModelSet(_, modelRef))
-        .evalMap(modifyCounter(_, cRef))
-        .drop(appConfig.logPeriod - 1) // reports every `logPeriod` records
-        .take(1)
-        .repeat
-        .evalTap(acc => Console[F].println(s"result:$acc, accuracy:${acc.accuracy()} "))
-        .void
+        .evalMap(a => predictIfModelSet(a, modelRef, cRef))
     }
 
 }
 
 object PredictionListener {
-  private case class AccuracyCounter(guessed: Long = 0, processed: Long = 0) {
-    def accuracy(): Float = if (processed == 0) 0 else guessed.toFloat / processed
+  private[listener] case class AccuracyCounter(guessed: Long = 0, processed: Long = 0) {
+    def accuracy: Float = if (processed == 0) 0 else guessed.toFloat / processed
 
     def inc(guessed: Boolean): AccuracyCounter =
       if (guessed) this.copy(this.guessed + 1, this.processed + 1) else this.copy(processed = this.processed + 1)

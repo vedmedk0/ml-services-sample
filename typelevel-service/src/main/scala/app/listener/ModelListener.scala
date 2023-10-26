@@ -1,5 +1,7 @@
 package app.listener
 
+import app.listener.ListenerResults._
+import cats.conversions.all._
 import cats.effect._
 import cats.effect.std.Console
 import cats.implicits._
@@ -12,16 +14,20 @@ class ModelListener[F[_]: Async: Concurrent: Console](
     modelRef: Ref[F, Option[Model]]
 )(implicit source: Source[F, Model, Error])
     extends Listener[F, Model, Error] {
-  //TODO: proper error handling & slf4j logging
 
-  override protected def executeEffects(initStream: fs2.Stream[F, Model]): fs2.Stream[F, Unit] =
+  override protected def streamLogic(
+      initStream: fs2.Stream[F, Either[Error, Model]]
+  ): fs2.Stream[F, PredictorResult] =
     initStream
-      .evalMap { newModel =>
-        modelRef.getAndSet(newModel.some).flatMap {
-          case Some(oldModel) => Console[F].println(s"Changed model $oldModel to $newModel")
-          case None           => Console[F].println(s"Set first model $newModel")
-        }
+      .evalMap { modelMaybe =>
+        modelMaybe.fold[F[PredictorResult]](
+          ParseError(_).pure[F],
+          { newModel =>
+            modelRef
+              .getAndSet(newModel.some)
+              .map(_.fold[PredictorResult](InitModel(newModel))(ChangedModel(_, newModel)))
+          }
+        )
       }
       .delayBy(3.second)
-
 }
